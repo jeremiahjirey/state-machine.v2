@@ -51,7 +51,7 @@ jobs:
            ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
            IMAGE_TAG: flask-latest
          run: |
-           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f inventory-app/Dockerfile ./inventory-app
            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
    deploy_to_eks:
