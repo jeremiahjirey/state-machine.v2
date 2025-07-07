@@ -1,9 +1,13 @@
 from flask import Flask, render_template, request, redirect, flash
 import requests
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Load from .env only if running locally
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    pass
 
 API_URL = os.getenv("API_URL")
 
@@ -42,3 +46,5 @@ def index():
 
 application = app
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
