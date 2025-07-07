@@ -1,0 +1,57 @@
+{
+  "Comment": "CRUD Inventory Step Function",
+  "StartAt": "Check Action",
+  "States": {
+    "Check Action": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.action",
+          "StringEquals": "create",
+          "Next": "Add Item"
+        },
+        {
+          "Variable": "$.action",
+          "StringEquals": "read",
+          "Next": "Read Item"
+        },
+        {
+          "Variable": "$.action",
+          "StringEquals": "update",
+          "Next": "Update Item"
+        },
+        {
+          "Variable": "$.action",
+          "StringEquals": "delete",
+          "Next": "Delete Item"
+        }
+      ],
+      "Default": "Unknown Action"
+    },
+    "Add Item": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:800802900236:function:add_item",
+      "End": true
+    },
+    "Read Item": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:800802900236:function:read_item",
+      "End": true
+    },
+    "Update Item": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:800802900236:function:update_item",
+      "End": true
+    },
+    "Delete Item": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:800802900236:function:delete_item",
+      "End": true
+    },
+    "Unknown Action": {
+      "Type": "Fail",
+      "Error": "InvalidAction",
+      "Cause": "Action must be one of create, read, update, delete"
+    }
+  }
+}
