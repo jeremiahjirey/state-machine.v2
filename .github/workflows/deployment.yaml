@@ -53,3 +53,68 @@ jobs:
          run: |
            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+   deploy_to_eks:
+     needs: build_and_push_ecr
+     runs-on: ubuntu-latest
+ 
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v3
+ 
+       - name: Configure AWS credentials
+         uses: aws-actions/configure-aws-credentials@v4
+         with:
+           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+           aws-region: ${{ secrets.AWS_REGION }}
+ 
+       - name: Install kubectl
+         run: |
+           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+           chmod +x kubectl
+           sudo mv kubectl /usr/local/bin/
+ 
+       - name: Configure kubectl
+         run: |
+           aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+      
+       - name: Checking Node
+         run: kubectl get node -A
+
+        
+      # - name: Delete Old Secrett
+      #   run: kubectl delete secret pod-secret
+
+       - name: Create Secret
+         run: |
+            kubectl create secret generic pod-secret \
+            --from-literal=API_URL=${{ secrets.AWS_RDS_HOST }} \
+           # --from-literal=DB_USER=${{ secrets.AWS_RDS_USERNAME }} \
+           # --from-literal=DB_PASSWORD=${{ secrets.AWS_RDS_PASSWORD }} \
+           # --from-literal=DB_DATABASE=${{ secrets.AWS_RDS_DATABASE }} \
+           # --from-literal=API_URL=${{ secrets.API_URL }} \
+           # --from-literal=S3_BUCKET=${{ secrets.S3_BUCKET_NAME }} \
+           # --from-literal=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+           # --from-literal=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+           # --from-literal=AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }}
+                  
+
+
+      # - name: Delete Old Deployment
+      #   run:  |
+      #    kubectl delete deployment flask
+      #    kubectl delete svc flask-app-service 
+          
+       - name: Deploy to EKS
+         env:
+           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+           IMAGE_TAG: ${{ github.sha }}
+         run: |
+           envsubst < deployment.yaml | kubectl apply -f -
+
+           
+       - name: Verify Deployment
+         run: kubectl get pods 

@@ -8,7 +8,7 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 
 app = Flask(__name__)
-app.secret_key = "secret"  # Ganti untuk keamanan production
+app.secret_key = "secret"
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -24,7 +24,6 @@ def index():
             "harga": request.form.get("harga")
         }
 
-        # Bersihkan field kosong
         clean_data = {k: v for k, v in data.items() if v}
 
         payload = {
@@ -39,3 +38,7 @@ def index():
             error = str(e)
 
     return render_template("index.html", result=result, error=error)
+
+
+application = app
+
